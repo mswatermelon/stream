@@ -1,20 +1,33 @@
+'use strict';
+
 const fs = require("fs");
 const crypto = require('crypto');
+const stream = require('stream');
 
 const hash = crypto.createHash('md5');
-hash.setEncoding('hex');
 
 const input = fs.createReadStream("data.txt");
 const output = fs.createWriteStream("copy.txt");
 
+class HashAndTransform {
+	constructor() {
+		const transform = new stream.Transform({
+		  transform(chunk, encoding, callback) {
+				hash.setEncoding('hex');
+		    hash.update(chunk, encoding);
+		    callback();
+		  },
+		});
+		return transform;
+	}
+}
+
 input.on("end", () => {
 	hash.end();
-
 	console.log(hash.read());
 });
 
-hash.on("finish", () => {
-	hash.pipe(output);
-})
+hash.on('finish', () => hash.pipe(output));
 
-input.pipe(hash);
+let hashAndTransform = new HashAndTransform();
+input.pipe(hashAndTransform);
