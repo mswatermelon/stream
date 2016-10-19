@@ -10,7 +10,7 @@ const input = fs.createReadStream("data.txt");
 const output = fs.createWriteStream("copy.txt");
 
 class HashAndTransform {
-	constructor() {
+	constructor(hash) {
 		const transform = new stream.Transform({
 		  transform(chunk, encoding, callback) {
 				hash.setEncoding('hex');
@@ -18,6 +18,7 @@ class HashAndTransform {
 		    callback();
 		  },
 		});
+
 		return transform;
 	}
 }
@@ -29,5 +30,5 @@ input.on("end", () => {
 
 hash.on('finish', () => hash.pipe(output));
 
-let hashAndTransform = new HashAndTransform();
+let hashAndTransform = new HashAndTransform(hash);
 input.pipe(hashAndTransform);
