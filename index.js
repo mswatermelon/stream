@@ -15,13 +15,55 @@ class HashAndTransform {
 		  transform(chunk, encoding, callback) {
 				hash.setEncoding('hex');
 		    hash.update(chunk, encoding);
+				this.push(chunk);
 		    callback();
-		  },
+		  }
 		});
 
 		return transform;
 	}
 }
+
+class MyReadable extends stream.Readable {
+  constructor(opt) {
+    super(opt);
+  }
+
+  _read() {
+    let str = '' + Math.floor(Math.random() * (9 + 1)) + 0;
+    let buf = Buffer.from(str, 'ascii');
+    this.push(buf);
+  }
+}
+
+class MyWritable extends stream.Writable {
+  constructor(opt) {
+    super(opt);
+  }
+
+	_write(chunk, encoding, callback) {
+		console.log(chunk.toString());
+    callback();
+  }
+}
+
+class MyTransform extends stream.Transform {
+  constructor(opt) {
+    super(opt);
+  }
+
+	_transform(chunk, encoding, callback) {
+		for(var i=0;i<chunk.length;i++)
+		{
+			chunk[i] ^= 0xAB;
+		}
+		this.push(chunk);
+    setTimeout(callback, 1000);
+  }
+}
+
+
+let hashAndTransform = new HashAndTransform(hash);
 
 input.on("end", () => {
 	hash.end();
@@ -29,6 +71,4 @@ input.on("end", () => {
 });
 
 hash.on('finish', () => hash.pipe(output));
-
-let hashAndTransform = new HashAndTransform(hash);
 input.pipe(hashAndTransform);
